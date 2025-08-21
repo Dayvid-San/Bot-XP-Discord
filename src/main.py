@@ -180,7 +180,7 @@ class ExperienceManager:
             ("⚜️ Nobre", 1702400),
             ("🛡️ Cavalaria", 425600),
             ("⚔️ Oficiais", 106400),
-            ("💰 Soldado de aluguel", 25600),
+            ("💰 Desafiante", 25600),
             ("✝️ Monge", 6400),
             ("🛠️ Armeiro", 1600),
             ("🧑‍🎓 Escudeiro", 400),
@@ -300,6 +300,7 @@ class Minerva(Client):
         await self.experience.xp_command(message)
         await self.experience.ranking_command(message)
         await self.experience.ranking_hierarchy(message)
+        await self.experience.team_commands(message)
 
 intents = Intents.default()
 intents.members = True
