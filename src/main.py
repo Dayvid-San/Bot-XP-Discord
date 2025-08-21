@@ -3,7 +3,7 @@ from discord import Client, Intents
 from discord.member import Member
 from discord.message import Message
 from dotenv import load_dotenv
-from catalog import catalogData # Assumindo que este arquivo existe
+from catalog import catalog_xp
 import os
 import json
 import re
@@ -94,7 +94,7 @@ def get_user_team(user_id: int) -> str | None:
 class ExperienceManager:
     def __init__(self, client: Client):
         self.client = client
-        self.catalog = catalogData.getCatalog()
+        self.catalog = catalog_xp
 
     def find_xp_in_catalog(self, category: str, item_name: str) -> int:
         """Procura o XP correspondente a uma categoria e item no catálogo."""
