@@ -310,15 +310,15 @@ class ExperienceManager:
                 await message.channel.send("Você não pertence a nenhuma equipe ainda.")
             return
 
-    async def list_catalog_command(self, message: discord.Message):
+    async def listCatalogCommand(self, message: discord.Message):
         if message.author.bot:
             return
 
         if message.content.lower() == "ty: listarxp":
-            catalog_message = "**Catálogo de XP**\n\n"
+            catalogMessage = "**Catálogo de XP**\n\n"
             
             for category, items in self.catalog.items():
-                catalog_message += f"**{category}**\n"
+                catalogMessage += f"**{category}**\n"
                 for item in items:
                     item_name = ""
                     for key, value in item.items():
@@ -327,16 +327,33 @@ class ExperienceManager:
                             break
                     
                     xp_value = item.get("XP", "N/A")
-                    catalog_message += f"`{item_name}` - {xp_value} XP\n"
+                    catalogMessage += f"`{item_name}` - {xp_value} XP\n"
                 
-                catalog_message += "\n"
+                catalogMessage += "\n"
             
-            if len(catalog_message) > 2000:
-                chunks = [catalog_message[i:i + 2000] for i in range(0, len(catalog_message), 2000)]
+            if len(catalogMessage) > 2000:
+                chunks = [catalogMessage[i:i + 2000] for i in range(0, len(catalogMessage), 2000)]
                 for chunk in chunks:
                     await message.channel.send(chunk)
             else:
-                await message.channel.send(catalog_message)
+                await message.channel.send(catalogMessage)
+
+
+    async def helpCommand(self, message: Message):
+        if message.author.bot:
+            return
+
+        if message.content.lower() == "ty: ajuda":
+            help_message = "**Lista de Comandos de " + botName + "**\n\n"
+            for category, commands in self.commands.items():
+                help_message += f"**{category}**\n"
+                for cmd in commands:
+                    help_message += f"`{cmd['comando']}` - {cmd['desc']}\n"
+                help_message += "\n" 
+
+            await message.channel.send(help_message)
+
+
 
 class Minerva(Client):
     def __init__(self, *args, **kwargs):
@@ -351,7 +368,7 @@ class Minerva(Client):
     async def on_member_join(self, member: Member):
         guild = member.guild
         if guild.system_channel:
-            await guild.system_channel.send(f'Welcome {member.mention} to {guild.name}!')
+            await guild.system_channel.send(f'Bem-vindo {member.mention} ao {guild.name}!')
 
     async def on_message(self, message: Message):
         if message.author.bot:
@@ -359,11 +376,15 @@ class Minerva(Client):
 
         if message.content.lower().startswith("ty: darxp"):
             await self.experience.add_catalog_xp_command(message)
-            return # Evita que outros comandos sejam processados se este for executado
+            return 
 
         if message.content.lower().startswith("ty: listarxp"):
-            await self.experience.list_catalog_command(message)
-            return # Evita que outros comandos sejam processados
+            await self.experience.listCatalogCommand(message)
+            return 
+        
+        if message.content.lower() == "ty: ajuda":
+            await self.experience.helpCommand(message)
+            return
 
         await self.experience.xp_command(message)
         await self.experience.ranking_command(message)
