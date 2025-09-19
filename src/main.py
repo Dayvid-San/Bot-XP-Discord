@@ -95,6 +95,28 @@ class ExperienceManager:
     def __init__(self, client: Client):
         self.client = client
         self.catalog = catalog_xp
+        # Adicionado: Definição dos comandos aqui
+        self.commands = {
+            "Comandos Gerais": [
+                {"comando": "ty: xp", "desc": "Mostra seu XP."},
+                {"comando": "ty: xp @usuario", "desc": "Mostra o XP de outro usuário."},
+                {"comando": "ty: ranking", "desc": "Mostra o ranking dos 10 usuários com mais XP."},
+                {"comando": "ty: guardião", "desc": "Mensagem sobre o bot."},
+                {"comando": "ty: ajuda", "desc": "Mostra esta lista de comandos."},
+            ],
+            "Comandos de Equipe": [
+                {"comando": "ty: minhaequipe", "desc": "Mostra a sua equipe e os pontos."},
+                {"comando": "ty: rankingequipes", "desc": "Mostra o ranking das equipes."},
+            ],
+            "Comandos de Admin (apenas para administradores)": [
+                {"comando": "ty: addxp @usuario <quantidade>", "desc": "Adiciona XP a um usuário."},
+                {"comando": "ty: listarxp", "desc": "Lista todas as categorias e XP do catálogo."},
+                {"comando": "ty: darxp @usuario \"Categoria\" \"Item\"", "desc": "Adiciona XP do catálogo para um usuário."},
+                {"comando": "ty: criarequipe <nome>", "desc": "Cria uma nova equipe."},
+                {"comando": "ty: adicionarmembro <nome> @membro", "desc": "Adiciona um membro a uma equipe."},
+                {"comando": "ty: darpontosequipe <nome> <quantidade>", "desc": "Adiciona pontos a uma equipe."},
+            ]
+        }
 
     def find_xp_in_catalog(self, category: str, item_name: str) -> int:
         """Procura o XP correspondente a uma categoria e item no catálogo."""
@@ -103,8 +125,8 @@ class ExperienceManager:
             return 0
         
         for item in category_data:
-            for key in item:
-                if isinstance(item[key], str) and item[key].lower() == item_name.lower():
+            for key, value in item.items():
+                if isinstance(value, str) and value.lower() == item_name.lower():
                     return item.get("XP", 0) 
         return 0
 
@@ -139,21 +161,48 @@ class ExperienceManager:
             await self.add_xp_command(message)
 
     async def add_xp_command(self, message: Message):
+        # Verifica se o autor da mensagem é um bot
         if message.author.bot:
             return
 
+        # Verifica se o usuário tem permissões de administrador
         if not message.author.guild_permissions.administrator:
             await message.channel.send("Você não tem permissão para usar este comando.")
             return
 
+        # Garante que há uma menção na mensagem
+        if not message.mentions:
+            await message.channel.send("Por favor, mencione um usuário. Use: `ty: addxp @usuario [quantidade] [justificativa]`.")
+            return
+
         try:
+            # Obtém o objeto do usuário mencionado
             mentioned_user = message.mentions[0]
-            xp_to_add = int(message.content.split()[-1])
+            
+            # Remove o comando e a menção do conteúdo da mensagem
+            # Ex: "ty: addxp <@!123...> 10 teste" -> "10 teste"
+            content_without_mention = message.content.lower().replace(f"<@!{mentioned_user.id}>", "").replace(f"<@{mentioned_user.id}>", "").replace("ty: addxp", "").strip()
+            
+            # Divide o restante da mensagem
+            parts = content_without_mention.split(' ', 1)
+            
+            # A primeira parte é o valor de XP, a segunda (se existir) é a justificativa
+            xp_to_add = int(parts[0])
+            justificativa = parts[1] if len(parts) > 1 else "Sem justificativa."
+
+            # Adiciona o XP e envia a confirmação
             add_xp(mentioned_user.id, xp_to_add)
-            await message.channel.send(f"{xp_to_add}xp foram adicionados para o usuário {mentioned_user.mention}!")
+            
+            await message.channel.send(
+                f"🎉 **{xp_to_add} XP** foram adicionados para o usuário {mentioned_user.mention}!"
+                f"\n**Motivo:** {justificativa}"
+            )
+            
         except (IndexError, ValueError):
-            await message.channel.send("Use o comando assim: `ty: addxp @usuario [quantidade]`.")
-    
+            await message.channel.send("Formato inválido. Use: `ty: addxp @usuario [quantidade] [justificativa]`.")
+
+
+            
     async def add_catalog_xp_command(self, message: Message):
         if message.author.bot:
             return
@@ -214,14 +263,20 @@ class ExperienceManager:
 
         user_xp = get_user_xp(message.author.id)
         xp_roles = [
+            ("👑 Dominador", 12202803200),
+            ("👑 Rei", 1743257600),
+            ("👑 Duque", 435814400),
+            ("👑 Conde", 108973600),
+            ("👑 Barão", 27238400),
             ("👑 Lorde", 6809600),
             ("⚜️ Nobre", 1702400),
             ("🛡️ Cavalaria", 425600),
             ("⚔️ Oficiais", 106400),
             ("💰 Soldado de aluguel", 25600),
-            ("✝️ Monge", 6400),
+            ("Mestre de armas", 6400),
             ("🛠️ Armeiro", 1600),
             ("🧑‍🎓 Escudeiro", 400),
+            ("Neófito", 200)
         ]
         
         for role_name, required_xp in xp_roles:
@@ -310,15 +365,15 @@ class ExperienceManager:
                 await message.channel.send("Você não pertence a nenhuma equipe ainda.")
             return
 
-    async def listCatalogCommand(self, message: discord.Message):
+    async def list_catalog_command(self, message: discord.Message):
         if message.author.bot:
             return
 
         if message.content.lower() == "ty: listarxp":
-            catalogMessage = "**Catálogo de XP**\n\n"
+            catalog_message = "**Catálogo de XP**\n\n"
             
             for category, items in self.catalog.items():
-                catalogMessage += f"**{category}**\n"
+                catalog_message += f"**{category}**\n"
                 for item in items:
                     item_name = ""
                     for key, value in item.items():
@@ -327,19 +382,19 @@ class ExperienceManager:
                             break
                     
                     xp_value = item.get("XP", "N/A")
-                    catalogMessage += f"`{item_name}` - {xp_value} XP\n"
+                    catalog_message += f"`{item_name}` - {xp_value} XP\n"
                 
-                catalogMessage += "\n"
+                catalog_message += "\n"
             
-            if len(catalogMessage) > 2000:
-                chunks = [catalogMessage[i:i + 2000] for i in range(0, len(catalogMessage), 2000)]
+            if len(catalog_message) > 2000:
+                chunks = [catalog_message[i:i + 2000] for i in range(0, len(catalog_message), 2000)]
                 for chunk in chunks:
                     await message.channel.send(chunk)
             else:
-                await message.channel.send(catalogMessage)
+                await message.channel.send(catalog_message)
 
 
-    async def helpCommand(self, message: Message):
+    async def help_command(self, message: Message):
         if message.author.bot:
             return
 
@@ -379,11 +434,11 @@ class Minerva(Client):
             return 
 
         if message.content.lower().startswith("ty: listarxp"):
-            await self.experience.listCatalogCommand(message)
+            await self.experience.list_catalog_command(message)
             return 
         
         if message.content.lower() == "ty: ajuda":
-            await self.experience.helpCommand(message)
+            await self.experience.help_command(message)
             return
 
         await self.experience.xp_command(message)
