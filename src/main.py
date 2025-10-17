@@ -91,11 +91,11 @@ def get_user_team(user_id: int) -> str | None:
             return team_name
     return None
     
+
 class ExperienceManager:
     def __init__(self, client: Client):
         self.client = client
         self.catalog = catalog_xp
-        # Adicionado: Definição dos comandos aqui
         self.commands = {
             "Comandos Gerais": [
                 {"comando": "ty: xp", "desc": "Mostra seu XP."},
@@ -161,37 +161,30 @@ class ExperienceManager:
             await self.add_xp_command(message)
 
     async def add_xp_command(self, message: Message):
-        # Verifica se o autor da mensagem é um bot
         if message.author.bot:
             return
 
-        # Verifica se o usuário tem permissões de administrador
         if not message.author.guild_permissions.administrator:
             await message.channel.send("Você não tem permissão para usar este comando.")
             return
 
-        # Garante que há uma menção na mensagem
         if not message.mentions:
             await message.channel.send("Por favor, mencione um usuário. Use: `ty: addxp @usuario [quantidade] [justificativa]`.")
             return
 
         try:
-            # Obtém o objeto do usuário mencionado
             mentioned_user = message.mentions[0]
-            
-            # Remove o comando e a menção do conteúdo da mensagem
-            # Ex: "ty: addxp <@!123...> 10 teste" -> "10 teste"
             content_without_mention = message.content.lower().replace(f"<@!{mentioned_user.id}>", "").replace(f"<@{mentioned_user.id}>", "").replace("ty: addxp", "").strip()
-            
-            # Divide o restante da mensagem
             parts = content_without_mention.split(' ', 1)
             
-            # A primeira parte é o valor de XP, a segunda (se existir) é a justificativa
             xp_to_add = int(parts[0])
             justificativa = parts[1] if len(parts) > 1 else "Sem justificativa."
 
-            # Adiciona o XP e envia a confirmação
             add_xp(mentioned_user.id, xp_to_add)
+            
+            # Chama o método para checar e atribuir o cargo após adicionar o XP
+            updated_xp = get_user_xp(mentioned_user.id)
+            await self.check_for_rank_up(mentioned_user, updated_xp)
             
             await message.channel.send(
                 f"🎉 **{xp_to_add} XP** foram adicionados para o usuário {mentioned_user.mention}!"
@@ -200,8 +193,6 @@ class ExperienceManager:
             
         except (IndexError, ValueError):
             await message.channel.send("Formato inválido. Use: `ty: addxp @usuario [quantidade] [justificativa]`.")
-
-
             
     async def add_catalog_xp_command(self, message: Message):
         if message.author.bot:
@@ -228,6 +219,11 @@ class ExperienceManager:
             
             if xp_to_add > 0:
                 add_xp(mentioned_user.id, xp_to_add)
+
+                # Chama o método para checar e atribuir o cargo após adicionar o XP
+                updated_xp = get_user_xp(mentioned_user.id)
+                await self.check_for_rank_up(mentioned_user, updated_xp)
+
                 await message.channel.send(
                     f"🏆 {xp_to_add} XP foram adicionados para o usuário {mentioned_user.mention} por '{category} - {item_name}'!"
                 )
@@ -254,14 +250,8 @@ class ExperienceManager:
                     ranking_message += f"{i}. ID {user_id}: {xp} XP\n"
             await message.channel.send(ranking_message)
 
-    async def ranking_hierarchy(self, message: Message):
-        if isinstance(message, discord.Message):
-            if message.author.bot:
-                return
-        else:
-            print("Mensagem não é do tipo esperado:", type(message))
-
-        user_xp = get_user_xp(message.author.id)
+    # NOVO MÉTODO: Checa e atribui o cargo ao usuário
+    async def check_for_rank_up(self, member, user_xp):
         xp_roles = [
             ("👑 Dominador", 12202803200),
             ("👑 Rei", 1743257600),
@@ -281,12 +271,13 @@ class ExperienceManager:
         
         for role_name, required_xp in xp_roles:
             if user_xp >= required_xp:
-                role = discord.utils.get(message.guild.roles, name=role_name)
-                if role and role not in message.author.roles:
-                    await message.author.add_roles(role)
-                    await message.channel.send(
-                        f"Parabéns, {message.author.mention}! Você ganhou o cargo de {role.name}!"
+                role = discord.utils.get(member.guild.roles, name=role_name)
+                if role and role not in member.roles:
+                    await member.add_roles(role)
+                    await member.send(
+                        f"Parabéns, {member.mention}! Você alcançou um novo nível de experiência e agora é **{role.name}**!"
                     )
+                    break 
 
     async def team_commands(self, message: Message):
         if message.author.bot:
@@ -393,7 +384,6 @@ class ExperienceManager:
             else:
                 await message.channel.send(catalog_message)
 
-
     async def help_command(self, message: Message):
         if message.author.bot:
             return
@@ -407,8 +397,6 @@ class ExperienceManager:
                 help_message += "\n" 
 
             await message.channel.send(help_message)
-
-
 
 class Minerva(Client):
     def __init__(self, *args, **kwargs):
@@ -443,7 +431,7 @@ class Minerva(Client):
 
         await self.experience.xp_command(message)
         await self.experience.ranking_command(message)
-        await self.experience.ranking_hierarchy(message)
+        # REMOVIDO: A chamada para ranking_hierarchy
         await self.experience.team_commands(message)
 
 intents = Intents.default()
