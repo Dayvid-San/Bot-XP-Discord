@@ -10,11 +10,12 @@ load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
 PREFIX = "ty: "
 
-# Lista de Cogs a serem carregados (caminho do arquivo sem a extensão .py)
 COGS_TO_LOAD = [
     "cogs.leveling.xp_cogs",
     "cogs.teams.teams_cogs",
     "cogs.media.download_cogs",
+    "cogs.knowledge.knowledge_cogs",
+    "cogs.scheduler.scheduler_cogs",
 ]
 
 class AthenaBot(commands.Bot):

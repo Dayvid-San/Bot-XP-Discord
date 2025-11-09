@@ -1,0 +1,109 @@
+/* data/knowledge_data.json (FINAL COM EMOJIS CORRIGIDOS) */
+{
+  "cargos_relevantes": {
+    "Dominador": {
+      "level": 10,
+      "emoji": "👑"
+    },
+    "Rei": {
+      "level": 9,
+      "emoji": "👑"
+    },
+    "Duque": {
+      "level": 8,
+      "emoji": "👑"
+    },
+    "Conde": {
+      "level": 7,
+      "emoji": "👑"
+    },
+    "Barão": {
+      "level": 6,
+      "emoji": "👑"
+    },
+    "Lorde": {
+      "level": 5,
+      "emoji": "👑"
+    },
+    "Nobre": {
+      "level": 4,
+      "emoji": "⚜️"
+    },
+    "Cavalaria": {
+      "level": 3,
+      "emoji": "🛡️"
+    },
+    "Oficiais": {
+      "level": 2,
+      "emoji": "⚔️"
+    },
+    "Desafiante": {
+      "level": 1,
+      "emoji": "💰"
+    },
+    "Mestre de armas": {
+      "level": 0,
+      "emoji": "🗡️"
+    },
+    "Armeiro": {
+      "level": 0,
+      "emoji": "🛠️"
+    },
+    "Escudeiro": {
+      "level": 0,
+      "emoji": "🧑‍🎓"
+    },
+    "Neófito": {
+      "level": 0,
+      "emoji": "🖊️"
+    }
+  },
+  "knowledge_base": {
+    /* ---------------------------------------------------- */
+    /* INFORMAÇÕES DE NÍVEL DE ENTRADA (Nível 1 ou 2) */
+    /* ---------------------------------------------------- */
+    "missao": {
+      "acesso_min": 1,
+      "info": "Nossa missão é desenvolver soluções inovadoras e sustentáveis que transformem o mercado de tecnologia na América Latina.",
+      "titulo": "Missão Empresarial"
+    },
+    "visao": {
+      "acesso_min": 1,
+      "info": "Ser a empresa líder em IA e Blockchain até 2028, com foco em impacto social.",
+      "titulo": "Visão de Futuro"
+    },
+    "acesso_freelancer": {
+      "acesso_min": 1,
+      "info": "O cargo de Freelancer é obtido ao atingir o cargo 'Desafiante' (25.600xp). Você ganha acesso ao canal de projetos externos.",
+      "titulo": "Acesso ao Freelancer"
+    },
+
+    /* ---------------------------------------------------- */
+    /* INFORMAÇÕES DE NÍVEL DE COORDENAÇÃO (Nível 3 ou 4) */
+    /* ---------------------------------------------------- */
+    "prioridade_projetos": {
+        "acesso_min": 3,
+        "info": "O cargo 'Cavalaria' (e superiores) tem prioridade na escolha de projetos e na alocação de recursos de TI.",
+        "titulo": "Regra de Prioridade em Projetos"
+    },
+    "admin_projetos": {
+        "acesso_min": 4,
+        "info": "Apenas o cargo 'Nobre' (e superiores) tem permissão para administrar, liderar e aprovar novos projetos internos.",
+        "titulo": "Administração de Projetos"
+    },
+    
+    /* ---------------------------------------------------- */
+    /* INFORMAÇÕES EXECUTIVAS E PRIVILEGIADAS (Nível 9 ou 10) */
+    /* ---------------------------------------------------- */
+    "aquisicoes_em_negociacao": {
+      "acesso_min": 9,
+      "info": "Informações confidenciais sobre a aquisição de [Nome da Startup] e o impacto no Market Share. (Acesso: Rei ou superior).",
+      "titulo": "Estratégia de Aquisições"
+    },
+    "sociedade_holding": {
+      "acesso_min": 10,
+      "info": "Detalhes sobre a Sociedade na Holding: Requer um contrato de 5 anos de fidelidade e alocação de 20% dos lucros em R&D. (Acesso: Dominador).",
+      "titulo": "Informações Confidenciais da Holding"
+    }
+  }
+}
