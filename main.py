@@ -16,6 +16,7 @@ COGS_TO_LOAD = [
     "cogs.media.download_cogs",
     "cogs.knowledge.knowledge_cogs",
     "cogs.scheduler.scheduler_cogs",
+    "cogs.music.music_cogs",
 ]
 
 class AthenaBot(commands.Bot):
