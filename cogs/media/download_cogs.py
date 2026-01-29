@@ -29,12 +29,18 @@ class Media(commands.Cog):
         download_id = f"{ctx.author.id}_{int(time.time())}"
 
         ydl_opts = {
-            'quiet': False,  # Para debug, permite logs
+            'quiet': False,
             'no_warnings': True,
             'noplaylist': True,
             'outtmpl': os.path.join(TEMP_DIR, '%(title)s.%(ext)s'),
             'progress_hooks': [lambda d: self.progress_hook(d, status_message, loop, download_id)],
-            'logger': MyLogger(),  # Logger personalizado para debug
+            'logger': MyLogger(),
+            'cookiefile': 'cookies.txt',  # Use a manual cookie file
+            'http_headers': {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
+                              'AppleWebKit/537.36 (KHTML, like Gecko) '
+                              'Chrome/58.0.3029.110 Safari/537.36'
+            }
         }
 
         if is_audio:
@@ -57,28 +63,26 @@ class Media(commands.Cog):
                 lambda: yt_dlp.YoutubeDL(ydl_opts).extract_info(url, download=True)
             )
 
-            # Tenta obter o caminho do arquivo
-            final_filepath = info.get('filepath')
             ext = 'mp3' if is_audio else 'mp4'
+            # yt-dlp may not return 'filepath' if download is True but file is cached
+            # so we construct the path ourselves from the info.
+            title = info.get('title', 'unknown')
+            safe_title = self.get_safe_filename(title)
+            final_filepath = os.path.join(TEMP_DIR, f"{safe_title}.{ext}")
 
-            # Fallback: usar o título do vídeo para prever o nome do arquivo
-            if not final_filepath or not os.path.exists(final_filepath):
-                title = info.get('title', 'unknown')
-                safe_title = self.get_safe_filename(title)
-                final_filepath = os.path.join(TEMP_DIR, f"{safe_title}.{ext}")
+            # If post-processing happens, the extension might change (e.g., .webm -> .mp3)
+            # The final path is in 'filepath' or 'requested_downloads'[0]['filepath']
+            final_filepath = info.get('filepath') or info.get('requested_downloads', [{}])[0].get('filepath') or final_filepath
 
-            # Último fallback: verifica arquivos recentes no diretório
             if not os.path.exists(final_filepath):
-                files = [f for f in os.listdir(TEMP_DIR) if f.endswith(f".{ext}")]
-                if files:
-                    # Pega o arquivo mais recente
-                    final_filepath = os.path.join(TEMP_DIR, max(
-                        files,
-                        key=lambda x: os.path.getctime(os.path.join(TEMP_DIR, x))
-                    ))
-                    print(f"[DEBUG] Fallback usado: {final_filepath}")
-                else:
-                    raise FileNotFoundError(f"Nenhum arquivo .{ext} encontrado em {TEMP_DIR}")
+                 # Last resort fallback if path construction fails
+                files = [os.path.join(TEMP_DIR, f) for f in os.listdir(TEMP_DIR)]
+                if not files:
+                    raise FileNotFoundError("Download failed and no file was found in the temp directory.")
+                # Get the most recently modified file in the directory
+                final_filepath = max(files, key=os.path.getmtime)
+                print(f"[DEBUG] Fallback used: {final_filepath}")
+           
 
             filename = os.path.basename(final_filepath)
             file_size = os.path.getsize(final_filepath)
@@ -143,6 +147,9 @@ class Media(commands.Cog):
 
 class MyLogger:
     def debug(self, msg):
+        # Ignore verbose cookie messages
+        if 'cookies' in msg.lower():
+            return
         print(f"[yt_dlp DEBUG] {msg}")
 
     def warning(self, msg):
