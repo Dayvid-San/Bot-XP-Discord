@@ -14,6 +14,7 @@ PREFIX = "ty: "
 COGS_TO_LOAD = [
     "cogs.leveling.xp_cogs",
     "cogs.teams.teams_cogs",
+    "cogs.media.download_cogs",
 ]
 
 class AthenaBot(commands.Bot):
